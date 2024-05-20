@@ -34,20 +34,8 @@ async function getUsdtBalance(provider: ethers.JsonRpcProvider, address: string)
     return ethers.formatUnits(balance, 6); // USDT has 6 decimals
 }
 
-// Function to get the balances in ETH and USDT
-async function getBalances(address: string): Promise<{ ethBalance: string; usdtBalance: string }> {
-    const provider = new ethers.JsonRpcProvider(ethProviderUrl);
-
-    const ethBalance = await getEthBalance(provider, address);
-    const usdtBalance = await getUsdtBalance(provider, address);
-
-    return {
-        ethBalance,
-        usdtBalance
-    };
-}
-
-app.get('/balance', async (req: Request, res: Response) => {
+// Endpoint to get ETH balance
+app.get('/eth-balance', async (req: Request, res: Response) => {
     try {
         const { address } = req.query;
 
@@ -55,8 +43,27 @@ app.get('/balance', async (req: Request, res: Response) => {
             return res.status(400).send({ error: 'Address is required' });
         }
 
-        const balances = await getBalances(address);
-        res.send(balances);
+        const provider = new ethers.JsonRpcProvider(ethProviderUrl);
+        const ethBalance = await getEthBalance(provider, address);
+        res.send({ ethBalance });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ error: 'Internal Server Error' });
+    }
+});
+
+// Endpoint to get USDT balance
+app.get('/usdt-balance', async (req: Request, res: Response) => {
+    try {
+        const { address } = req.query;
+
+        if (!address || typeof address !== 'string') {
+            return res.status(400).send({ error: 'Address is required' });
+        }
+
+        const provider = new ethers.JsonRpcProvider(ethProviderUrl);
+        const usdtBalance = await getUsdtBalance(provider, address);
+        res.send({ usdtBalance });
     } catch (error) {
         console.error(error);
         res.status(500).send({ error: 'Internal Server Error' });
